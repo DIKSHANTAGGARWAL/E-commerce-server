@@ -3,6 +3,8 @@ const cors = require("cors")
 require('./db/config');
 const User = require("./db/User");
 const Product = require("./db/product")
+const multer=require('multer')
+
 const app = express();
 
 const Jwt = require('jsonwebtoken')
@@ -10,6 +12,9 @@ const jwtKey = 'e-comm';
 
 app.use(express.json());
 app.use(cors());
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 app.post("/register", async (req, resp) => {
     // resp.send(req.body);
@@ -47,10 +52,11 @@ app.post("/login", async (req, resp) => {
     }
 })
 
-app.post("/add-product", async (req, resp) => {
+app.post("/add-product", upload.single('image'),async (req, resp) => {
     let product = new Product(req.body);
     let result = await product.save();
     resp.send(result)
+    console.log(result)
 })
 
 app.get("/products", async (req, resp) => {
@@ -86,7 +92,7 @@ app.put("/product/:id", async (req, resp) => {
     resp.send(result)
 })
 
-app.get("/search/:key", async (req, resp) => {
+app.get("/search/:key",verifyToken ,async (req, resp) => {
     let result = await Product.find({
         "$or": [
             { name: { $regex: req.params.key } },
@@ -97,11 +103,22 @@ app.get("/search/:key", async (req, resp) => {
     resp.send(result)
 })
 
-// function verifyToken(req,resp,next){
-//     const token=req.headers['authorization'];
-//     console.warn("middlewre",token)
-//     next();
-// }
+function verifyToken(req, resp, next) {
+    const token = req.headers['authorization'];
+        console.log(token)
+                    next()
+    // if (token) {
+    //     token = token.split(' ')[1]
+    //     Jwt.verify(token, jwtKey, (err, valid) => {
+    //         if (err) {
+    //             resp.status(401).send({ result: "Please provide valid token" })
+    //         } else {
+    //         }
+    //     })
+    // } else {
+    //     resp.status(403).send({ result: "Please add token with header" })
+    // }
+}
 
 app.listen(5000, () => {
     console.log("Server Started");

@@ -5,7 +5,12 @@ const userSchema=new mongoose.Schema({
     price:String,
     category:String,
     userId:String,
-    company:String
+    company:String,
+    isCart:{
+        type:Boolean,
+        default:false
+    },
+    image:Buffer
 });
 
 module.exports=mongoose.model("products",userSchema);
